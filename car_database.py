@@ -1,6 +1,5 @@
 import sqlite3
 
-
 # Opret tabellen
 conn = sqlite3.connect("car_inventory.db")
 cursor = conn.cursor()
