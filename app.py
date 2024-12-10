@@ -81,10 +81,10 @@ def add_car():
     model = data.get('model')
     fuel_type = data.get('fuel_type')
     mileage = data.get('mileage')
-    status = data.get('status')
+    is_rented = data.get('status')
     has_damage = data.get('has_damage', 0) 
 
-    if not (brand and model and fuel_type and mileage and status):
+    if not (brand and model and fuel_type and mileage and is_rented):
         return jsonify({'error': 'All fields are required'}), 400
 
     conn = connect_db()
