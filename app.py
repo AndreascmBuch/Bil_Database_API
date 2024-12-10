@@ -83,6 +83,8 @@ def add_car():
 
     conn.commit() 
     car_id = cursor.lastrowid  # Hent ID for den indsatte bil
+    # Efter commit og før return
+    notify_event_service("new_car_added", {"car_id": car_id,"brand": brand,"model": model,"fuel_type": fuel_type,"mileage": mileage,"is_rented": is_rented,"has_damage": has_damage})
     conn.close()
 
     # Giv feedback til klienten
