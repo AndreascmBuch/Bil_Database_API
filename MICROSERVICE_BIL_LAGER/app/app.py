@@ -7,7 +7,22 @@ app = Flask(__name__)
 def connect_db():
     conn = sqlite3.connect('car_inventory.db')
     conn.row_factory = sqlite3.Row  # Return results as dictionaries
-    return conn
+    return conn 
+
+EVENT_SERVICE_URL = "http://localhost:5003/events"
+
+def notify_event_service(event_type, event_data):
+    try:
+        response = requests.post(EVENT_SERVICE_URL, json={
+            "type": event_type,
+            "data": event_data
+        })
+        if response.status_code == 200:
+            print(f"Event '{event_type}' sent successfully")
+        else:
+            print(f"Failed to send event. Status: {response.status_code}")
+    except Exception as e:
+        print(f"Error sending event: {e}")
 
 ##### --------------- GET METHODS --------------- #####
 
@@ -78,7 +93,8 @@ def add_car():
         VALUES (?, ?, ?, ?, ?, ?)
     """, (brand, model, fuel_type, mileage, status, has_damage))
 
-    conn.commit()
+    conn.commit() 
+    car_id = cursor.lastrowid
     conn.close()
 
     return jsonify({'message': 'Car added successfully'}), 201
