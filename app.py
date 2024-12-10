@@ -1,5 +1,7 @@
 from flask import Flask, jsonify, request
 import sqlite3
+import requests
+
 
 app = Flask(__name__)
 
@@ -9,9 +11,9 @@ def connect_db():
     conn.row_factory = sqlite3.Row  # Return results as dictionaries
     return conn 
 
-###EVENT_SERVICE_URL = "http://localhost:5003/events"
+EVENT_SERVICE_URL = "http://localhost:5003/events"
 
-#def notify_event_service(event_type, event_data):
+def notify_event_service(event_type, event_data):
     try:
         response = requests.post(EVENT_SERVICE_URL, json={
             "type": event_type,
@@ -62,7 +64,7 @@ def get_damaged_cars():
 
     cursor.execute("SELECT * FROM cars WHERE has_damage = 1")
     damaged_cars = [dict(row) for row in cursor.fetchall()] 
-    conn.close
+    conn.close()
 
     if not damaged_cars:
         return jsonify({'No cars require service at the moment.'}), 404
@@ -94,7 +96,7 @@ def add_car():
     """, (brand, model, fuel_type, mileage, status, has_damage))
 
     conn.commit() 
-   # car_id = cursor.lastrowid
+    car_id = cursor.lastrowid
     conn.close()
 
     return jsonify({'message': 'Car added successfully'}), 201
