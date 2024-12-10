@@ -9,9 +9,9 @@ def connect_db():
     conn.row_factory = sqlite3.Row  # Return results as dictionaries
     return conn 
 
-EVENT_SERVICE_URL = "http://localhost:5003/events"
+###EVENT_SERVICE_URL = "http://localhost:5003/events"
 
-def notify_event_service(event_type, event_data):
+#def notify_event_service(event_type, event_data):
     try:
         response = requests.post(EVENT_SERVICE_URL, json={
             "type": event_type,
@@ -94,7 +94,7 @@ def add_car():
     """, (brand, model, fuel_type, mileage, status, has_damage))
 
     conn.commit() 
-    car_id = cursor.lastrowid
+   # car_id = cursor.lastrowid
     conn.close()
 
     return jsonify({'message': 'Car added successfully'}), 201
