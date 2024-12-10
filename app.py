@@ -11,7 +11,7 @@ def connect_db():
     conn.row_factory = sqlite3.Row  # Return results as dictionaries
     return conn 
 
-EVENT_SERVICE_URL = "http://localhost:5003/events"
+EVENT_SERVICE_URL = "https://eventbroker-enaza3hfeefdd0gm.northeurope-01.azurewebsites.net/events"
 
 def notify_event_service(event_type, event_data):
     try:
