@@ -91,5 +91,15 @@ def add_car():
     return jsonify({'message': 'Car added successfully', 'car_id': car_id}), 201
 
 
+# test route så vi ikke får 404
+@app.route('/', methods=['GET'])
+def home():
+    return jsonify({
+        "service": "cars service",
+        "version": "1.0.0",
+        "description": "A RESTful API for managing cars"
+    })
+
+
 if __name__ == '__main__':
     app.run()
