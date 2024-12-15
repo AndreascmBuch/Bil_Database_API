@@ -1,7 +1,9 @@
 from flask import Flask, jsonify, request
 import sqlite3
 import requests
-from dotenv import load_dotenv 
+from dotenv import load_dotenv
+import os
+
 
 app = Flask(__name__)
 # Load environment variables from .env file
@@ -56,13 +58,13 @@ def get_car_by_id(car_id):
     conn.close()
 
     if car is None:
-        return jsonify({'Error': f'Car with ID {car_id} was not found. Try something else.'})
+        return jsonify({'Error': f'Car with ID {car_id} was not found. Try something else.'}), 404
     
     car_dict = dict(car)
     return jsonify(car_dict), 200
 
 # Get all cars with damage in DB
-@app.route('/cars', methods=['POST'])
+@app.route('/cars/add', methods=['POST'])
 def add_car():
     data = request.json
     brand = data.get('brand')
