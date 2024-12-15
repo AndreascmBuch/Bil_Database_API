@@ -1,9 +1,14 @@
 from flask import Flask, jsonify, request
 import sqlite3
 import requests
-
+from dotenv import load_dotenv 
 
 app = Flask(__name__)
+# Load environment variables from .env file
+load_dotenv()
+
+# Get DB_PATH from environment variable or use default
+DB_PATH = os.getenv('DB_PATH', 'car_inventory.db')
 
 # Connect to DB
 def connect_db():
