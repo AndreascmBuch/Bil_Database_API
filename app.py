@@ -14,7 +14,7 @@ DB_PATH = os.getenv('DB_PATH', 'car_inventory.db')
 
 # Connect to DB
 def connect_db():
-    conn = sqlite3.connect('car_inventory.db')
+    conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row  # Return results as dictionaries
     return conn 
 
