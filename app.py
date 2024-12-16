@@ -142,7 +142,6 @@ def add_car():
 
 # test route så vi ikke får 404
 @app.route('/', methods=['GET'])
-@jwt_required()
 def home():
     return jsonify({
         "service": "cars service",
