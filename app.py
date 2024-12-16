@@ -3,6 +3,7 @@ import sqlite3
 import requests
 from dotenv import load_dotenv
 import os
+from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity
 
 # Load environment variables from .env file
 load_dotenv()
@@ -11,6 +12,22 @@ load_dotenv()
 DB_PATH = os.getenv('DB_PATH', 'car_inventory.db')
 
 app = Flask(__name__)
+
+# Configure JWT settings
+app.config['JWT_SECRET_KEY'] = os.getenv('KEY', 'your_secret_key')  # Load from .env
+app.config['JWT_TOKEN_LOCATION'] = ['headers']  # Ensure tokens are in headers
+app.config['JWT_HEADER_NAME'] = 'Authorization'  # Default header name for JWT
+app.config['JWT_HEADER_TYPE'] = 'Bearer'  # Prefix for the token (e.g., Bearer <token>)
+
+# Initialize the JWT manager
+jwt = JWTManager(app)
+
+@app.route('/debug', methods=['GET'])
+def debug():
+    return jsonify({
+        "JWT_SECRET_KEY": os.getenv('KEY', 'Not Set'),
+        "Database_Path": DB_PATH
+    }), 200
 
 
 # Connect to DB
@@ -59,6 +76,7 @@ def notify_event_service(event_type, event_data):
 
 # Get all cars in DB
 @app.route('/cars', methods=['GET'])
+@jwt_required()
 def get_cars():
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -71,6 +89,7 @@ def get_cars():
 
 # Get specific car in DB
 @app.route('/cars/<int:car_id>', methods = ['GET'])
+@jwt_required()
 def get_car_by_id(car_id):
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -87,6 +106,7 @@ def get_car_by_id(car_id):
 
 # Get all cars with damage in DB
 @app.route('/cars/add', methods=['POST'])
+@jwt_required()
 def add_car():
     data = request.json
     brand = data.get('brand')
@@ -122,6 +142,7 @@ def add_car():
 
 # test route så vi ikke får 404
 @app.route('/', methods=['GET'])
+@jwt_required()
 def home():
     return jsonify({
         "service": "cars service",
