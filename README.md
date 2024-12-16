@@ -38,7 +38,7 @@ Denne service bruger følgende variabler fra .env-filen:
 | DB_PATH          | Sti til SQLite-databasen           | car_inventory.db    |
 | FLASK_ENV        | Flask-miljø (development anbefalet)| development         |
 | KEY              | JWT secret key til autentifikation | your_secret_key     |
-| EVENT_SERVICE_URL| URL til Event Broker               | (skal angives manuelt)|
+
 
 ### API Endpoints
 
