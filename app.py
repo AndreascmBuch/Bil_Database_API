@@ -1,22 +1,44 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, g
 import sqlite3
 import requests
 from dotenv import load_dotenv
 import os
 
-
-app = Flask(__name__)
 # Load environment variables from .env file
 load_dotenv()
 
 # Get DB_PATH from environment variable or use default
 DB_PATH = os.getenv('DB_PATH', 'car_inventory.db')
 
+app = Flask(__name__)
+
+
 # Connect to DB
-def connect_db():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row  # Return results as dictionaries
-    return conn 
+def get_db_connection():
+    if 'db' not in g:
+        g.db = sqlite3.connect(DB_PATH) 
+        g.db.row_factory = sqlite3.Row
+    return g.db
+
+@app.teardown_appcontext
+def close_db(error):
+    if 'db' in g:
+        g.db.close()
+
+with sqlite3.connect(DB_PATH) as conn:
+    cursor = conn.cursor()
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS damage(
+        car_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        brand TEXT NOT NULL,
+        model TEXT NOT NULL,
+        fuel_type TEXT NOT NULL,
+        mileage INTEGER NOT NULL,
+        is_rented BOOLEAN NOT NULL DEFAULT 0,
+        has_damage BOOLEAN NOT NULL DEFAULT 0
+    )
+    ''')
+    conn.commit()
 
 EVENT_SERVICE_URL = "https://eventbroker-enaza3hfeefdd0gm.northeurope-01.azurewebsites.net/events"
 
@@ -38,7 +60,7 @@ def notify_event_service(event_type, event_data):
 # Get all cars in DB
 @app.route('/cars', methods=['GET'])
 def get_cars():
-    conn = connect_db()
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     cursor.execute("SELECT * FROM cars")
@@ -50,7 +72,7 @@ def get_cars():
 # Get specific car in DB
 @app.route('/cars/<int:car_id>', methods = ['GET'])
 def get_car_by_id(car_id):
-    conn = connect_db()
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     cursor.execute("SELECT * FROM cars WHERE car_id = ?", (car_id,))
@@ -79,7 +101,7 @@ def add_car():
         return jsonify({'error': 'Fields brand, model, fuel_type, and mileage are required'}), 400
 
     # Opret forbindelse til databasen
-    conn = connect_db()
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     # Indsæt data i tabellen
