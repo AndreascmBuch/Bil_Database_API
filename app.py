@@ -155,6 +155,39 @@ def add_car():
     
     return jsonify({'message': 'Car added successfully', 'car_id': car_id}), 201
 
+##### --------------- DElETE METHODS --------------- ##### 
+# Delete a car from DB
+@app.route('/cars/delete/<int:car_id>', methods=['DELETE'])
+@jwt_required()
+def delete_car(car_id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Check if car exists
+    cursor.execute("SELECT * FROM cars WHERE car_id = ?", (car_id,))
+    car = cursor.fetchone()
+
+    if car is None:
+        conn.close()
+        return jsonify({'Error': f'Car with ID {car_id} not found. Cannot delete.'}), 404
+
+    try:
+        # Delete the car from the database
+        cursor.execute("DELETE FROM cars WHERE car_id = ?", (car_id,))
+        conn.commit()
+
+        # Notify event service about the car deletion
+        event_data = {"car_id": car_id}
+        notify_event_service("car_deleted", event_data)
+
+    except sqlite3.Error as e:
+        conn.rollback()
+        conn.close()
+        return jsonify({'error': f'Database error: {str(e)}'}), 500
+
+    conn.close()
+    
+    return jsonify({'message': f'Car with ID {car_id} has been deleted successfully.'}), 200
 
 # test route so we don't get 404
 @app.route('/', methods=['GET'])
