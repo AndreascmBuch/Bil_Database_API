@@ -66,9 +66,9 @@ def notify_event_service(event_type, event_data):
             "data": event_data
         })
         if response.status_code == 200:
-            print(f"Event '{event_type}' sent successfully")
+            print(f"Event '{event_type}' sent successfully with data: {event_data}")
         else:
-            print(f"Failed to send event. Status: {response.status_code}")
+            print(f"Failed to send event. Status: {response.status_code}, Response: {response.text}")
     except Exception as e:
         print(f"Error sending event: {e}")
 
