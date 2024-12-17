@@ -45,7 +45,7 @@ def close_db(error):
 with sqlite3.connect(DB_PATH) as conn:
     cursor = conn.cursor()
     cursor.execute('''
-    CREATE TABLE IF NOT EXISTS damage(
+    CREATE TABLE IF NOT EXISTS cars (
         car_id INTEGER PRIMARY KEY AUTOINCREMENT,
         brand TEXT NOT NULL,
         model TEXT NOT NULL,
@@ -72,7 +72,8 @@ def notify_event_service(event_type, event_data):
     except Exception as e:
         print(f"Error sending event: {e}")
 
-##### --------------- GET METHODS --------------- #####
+
+##### --------------- GET METHODS --------------- ##### 
 
 # Get all cars in DB
 @app.route('/cars', methods=['GET'])
@@ -104,7 +105,9 @@ def get_car_by_id(car_id):
     car_dict = dict(car)
     return jsonify(car_dict), 200
 
-# Get all cars with damage in DB
+##### --------------- POST METHODS --------------- ##### 
+
+# Add new car to DB
 @app.route('/cars/add', methods=['POST'])
 @jwt_required()
 def add_car():
@@ -113,34 +116,47 @@ def add_car():
     model = data.get('model')
     fuel_type = data.get('fuel_type')
     mileage = data.get('mileage')
-    is_rented = data.get('is_rented', 0)  # Standardværdi er 0, hvis ikke angivet
-    has_damage = data.get('has_damage', 0)  # Standardværdi er 0, hvis ikke angivet
+    is_rented = data.get('is_rented', 0)  # Default to 0 if not provided
+    has_damage = data.get('has_damage', 0)  # Default to 0 if not provided
 
-    # Valider påkrævede felter
-    if not (brand and model and fuel_type and mileage):
-        return jsonify({'error': 'Fields brand, model, fuel_type, and mileage are required'}), 400
+    # Validate required fields
+    if not (brand and model and fuel_type and isinstance(mileage, int) and mileage > 0):
+        return jsonify({'error': 'Fields brand, model, fuel_type, and mileage (positive integer) are required'}), 400
 
-    # Opret forbindelse til databasen
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Indsæt data i tabellen
-    cursor.execute("""
-        INSERT INTO cars (brand, model, fuel_type, mileage, is_rented, has_damage)
-        VALUES (?, ?, ?, ?, ?, ?)
-    """, (brand, model, fuel_type, mileage, is_rented, has_damage))
-
-    conn.commit() 
-    car_id = cursor.lastrowid  # Hent ID for den indsatte bil
-    # Efter commit og før return
-    notify_event_service("new_car_added", {"car_id": car_id,"brand": brand,"model": model,"fuel_type": fuel_type,"mileage": mileage,"is_rented": is_rented,"has_damage": has_damage})
+    try:
+        # Insert new car into the database
+        cursor.execute("""
+            INSERT INTO cars (brand, model, fuel_type, mileage, is_rented, has_damage)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (brand, model, fuel_type, mileage, is_rented, has_damage))
+        conn.commit()
+        car_id = cursor.lastrowid
+        
+        # Notify event service about the new car
+        event_data = {
+            "car_id": car_id,
+            "brand": brand,
+            "model": model,
+            "fuel_type": fuel_type,
+            "mileage": mileage,
+            "is_rented": is_rented,
+            "has_damage": has_damage
+        }
+        notify_event_service("new_car_added", event_data)
+        
+    except sqlite3.Error as e:
+        conn.rollback()
+        return jsonify({'error': f'Database error: {str(e)}'}), 500
+    
     conn.close()
-
-    # Giv feedback til klienten
+    
     return jsonify({'message': 'Car added successfully', 'car_id': car_id}), 201
 
 
-# test route så vi ikke får 404
+# test route so we don't get 404
 @app.route('/', methods=['GET'])
 def home():
     return jsonify({
@@ -148,7 +164,6 @@ def home():
         "version": "1.0.0",
         "description": "A RESTful API for managing cars"
     })
-
 
 if __name__ == '__main__':
     app.run(debug=True)
