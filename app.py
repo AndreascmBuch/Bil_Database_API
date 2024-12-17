@@ -59,19 +59,16 @@ with sqlite3.connect(DB_PATH) as conn:
 
 EVENT_SERVICE_URL = "https://eventbroker-enaza3hfeefdd0gm.northeurope-01.azurewebsites.net/events"
 
-def notify_event_service(event_type, event_data, token):
-    headers = {
-        'Authorization': f'Bearer {token}'  # JWT-token i Authorization-headeren
-    }
+def notify_event_service(event_type, event_data):
     try:
         response = requests.post(EVENT_SERVICE_URL, json={
             "type": event_type,
             "data": event_data
-        }, headers=headers)  # Tilføj headers med token
+        })
         if response.status_code == 200:
             print(f"Event '{event_type}' sent successfully")
         else:
-            print(f"Failed to send event. Status: {response.status_code}, Response: {response.text}")
+            print(f"Failed to send event. Status: {response.status_code}")
     except Exception as e:
         print(f"Error sending event: {e}")
 
